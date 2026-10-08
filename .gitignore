@@ -8,3 +8,7 @@ __pycache__/
 coverage.xml
 dist/
 node_modules/
+*.sqlite*
+*.db
+*.db-wal
+*.db-shm
