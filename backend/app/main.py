@@ -1,10 +1,11 @@
-"""FinSight API foundation: no file uploads, network fetch or LLM invocation."""
+"""FinSight API: deterministic calculations and protected evidence access."""
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, Field
 from .finance import RatioInputs, RatioResult, calculate_ratio, SectorMetric, compare_metrics
+from .evidence_api import router as evidence_router
 
-app = FastAPI(title="FinSight", version="0.1.0", docs_url="/docs", redoc_url=None)
+app = FastAPI(title="FinSight", version="0.2.0", docs_url="/docs", redoc_url=None)
+app.include_router(evidence_router)
 
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
@@ -24,14 +25,14 @@ def ratio(payload: RatioInputs):
     return calculate_ratio(payload)
 
 class ComparisonInput(BaseModel):
-    metrics: list[SectorMetric] = Field(min_length=2, max_length=100)
+    metrics: list[SectorMetric] = Field(min_length=2,max_length=100)
     cross_sector: bool = False
 
 @app.post("/v1/metrics/validate-comparison")
 def validate_comparison(payload: ComparisonInput):
     try:
-        checked = compare_metrics(payload.metrics, payload.cross_sector)
+        checked = compare_metrics(payload.metrics,payload.cross_sector)
     except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc))
-    return {"comparable": True, "metric_code": checked[0].metric_code, "companies": len(checked),
-            "cross_sector": payload.cross_sector, "rank_generated": False}
+        raise HTTPException(status_code=422,detail=str(exc))
+    return {"comparable":True,"metric_code":checked[0].metric_code,"companies":len(checked),
+            "cross_sector":payload.cross_sector,"rank_generated":False}
