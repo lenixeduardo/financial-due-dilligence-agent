@@ -21,7 +21,7 @@ async def lifespan(app: FastAPI):
         ensure_workspace(workspace)
     yield
 
-app = FastAPI(title="FinSight", version="0.3.0", docs_url="/docs", redoc_url=None, lifespan=lifespan)
+app = FastAPI(title="FinSight", version="0.4.0", docs_url=None if os.getenv("FINSIGHT_ENV")=="production" else "/docs", redoc_url=None, lifespan=lifespan)
 app.include_router(evidence_router)
 app.include_router(ingestion_router)
 app.include_router(comparison_router)
@@ -41,7 +41,25 @@ async def security_headers(request: Request, call_next):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "finsight"}
+    return {"status":"alive","service":"finsight"}
+
+@app.get("/ready")
+def ready():
+    from pathlib import Path
+    from .db import connection
+    try:
+        if os.getenv("FINSIGHT_ENV")=="production":
+            if os.getenv("FINSIGHT_AUTH_MODE")!="users":
+                raise RuntimeError("user authentication must be enabled")
+            location=os.getenv("FINSIGHT_SQLITE_PATH","")
+            if not Path(location).is_absolute() or location.startswith("/tmp/"):
+                raise RuntimeError("durable absolute SQLite path is required")
+        with connection() as db:
+            db.execute("SELECT 1").fetchone()
+        return {"status":"ready"}
+    except Exception:
+        raise HTTPException(status_code=503,detail="service not ready")
+
 
 @app.post("/v1/metrics/ratio", response_model=RatioResult)
 def ratio(payload: RatioInputs):
