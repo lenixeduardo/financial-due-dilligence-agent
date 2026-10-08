@@ -1,0 +1,47 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    read_only: true
+    environment:
+      FINSIGHT_ENV: production
+      FINSIGHT_AUTH_MODE: users
+      FINSIGHT_SQLITE_PATH: /data/finsight.sqlite3
+      FINSIGHT_WORKSPACE_ID: ${FINSIGHT_WORKSPACE_ID:-local}
+      FINSIGHT_ENABLE_CVM_FETCH: "0"
+      HOME: /tmp
+    volumes:
+      - ${FINSIGHT_DATA_PATH:?Absolute persistent host data directory required}:/data
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    expose:
+      - "8000"
+  web:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_FINSIGHT_AUTH_MODE: users
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      FINSIGHT_DOMAIN: ${FINSIGHT_DOMAIN:?HTTPS domain required}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    security_opt:
+      - no-new-privileges:true
+volumes:
+  caddy-data:
+  caddy-config:
