@@ -3,7 +3,7 @@ import base64
 import binascii
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-from .access import authorize_workspace
+from .access import authorize_workspace, authorize_analyst
 from .ingestion import ingest_bytes, MAX_FILE_BYTES
 from .analysis import answer_from_evidence
 
@@ -22,7 +22,7 @@ class QuestionRequest(BaseModel):
     question: str=Field(min_length=1,max_length=500)
 
 @router.post("/documents/ingest")
-def ingest(workspace_id: str,payload:DocumentRequest, _:str=Depends(authorize_workspace)):
+def ingest(workspace_id: str,payload:DocumentRequest, _:str=Depends(authorize_analyst)):
     try:
         decoded=base64.b64decode(payload.base64_content,validate=True)
         if len(decoded)>MAX_FILE_BYTES:
