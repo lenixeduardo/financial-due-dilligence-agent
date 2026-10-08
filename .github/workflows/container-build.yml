@@ -17,4 +17,5 @@ jobs:
         env:
           FINSIGHT_DOMAIN: finance.example.com
           FINSIGHT_DATA_PATH: /tmp/finsight-compose-test
+          FINSIGHT_BACKUP_PATH: /tmp/finsight-compose-backups
         run: docker compose -f compose.production.yml config --quiet
