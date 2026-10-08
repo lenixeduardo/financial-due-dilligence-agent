@@ -2,6 +2,8 @@ import React, {useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {Search,FileSearch,GitCompare,Network,ShieldCheck,ArrowRight,BookOpen} from 'lucide-react';
 import './style.css';
+import './auth.css';
+import {AuthProvider,SessionHeader} from './auth';
 import './workbench.css';
 import Workbench from './Workbench';
 import DfpDossier from './DfpDossier';
@@ -27,7 +29,7 @@ function App(){
     <div className="sidebar-note">Aplicação sob medida<br/><span>Protótipo visual · Dados de demonstração</span></div>
   </aside>
   <main>
-    <header><span className="eyebrow">FINANCIAL INTELLIGENCE / WORKBENCH</span><span className="pill"><ShieldCheck size={15}/> Ambiente demonstrativo</span></header>
+    <header><span className="eyebrow">FINANCIAL INTELLIGENCE / WORKBENCH</span><><span className="pill"><ShieldCheck size={15}/> Ambiente de análise</span><SessionHeader/></></header>
     <section className="hero">
       <div className="eyebrow">ANÁLISE • INTELIGÊNCIA • DECISÃO</div>
       <h1>Investigue empresas<br/><em>além dos números.</em></h1>
@@ -47,4 +49,4 @@ function App(){
   </main>
  </div>
 }
-createRoot(document.getElementById('root')!).render(<React.StrictMode><App/></React.StrictMode>);
+createRoot(document.getElementById('root')!).render(<React.StrictMode><AuthProvider><App/></AuthProvider></React.StrictMode>);
