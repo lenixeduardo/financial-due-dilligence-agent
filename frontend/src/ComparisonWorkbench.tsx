@@ -29,8 +29,8 @@ export default function ComparisonWorkbench({multisector}:{multisector:boolean})
  const [period,setPeriod]=useState('2025-FY');
  const [workspace,setWorkspace]=useState('local');
  const effectiveWorkspace=userAuthMode?(session?.workspace??''):workspace;
- const authorized=userAuthMode?!!session:!!apiKey;
  const [apiKey,setApiKey]=useState('');
+ const authorized=userAuthMode?!!session:!!apiKey;
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState('');
  const [result,setResult]=useState<Result|null>(null);
