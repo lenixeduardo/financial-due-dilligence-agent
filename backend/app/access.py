@@ -27,3 +27,10 @@ def authorize_workspace(workspace_id:str,x_workspace_key:str|None=Header(default
                         authorization:str|None=Header(default=None)):
     workspace_identity(workspace_id,authorization,x_workspace_key)
     return workspace_id
+
+def authorize_analyst(workspace_id:str,x_workspace_key:str|None=Header(default=None),
+                      authorization:str|None=Header(default=None)):
+    claims=workspace_identity(workspace_id,authorization,x_workspace_key)
+    if os.getenv("FINSIGHT_AUTH_MODE")=="users" and claims["role"] not in ("analyst","admin"):
+        raise HTTPException(status_code=403,detail="write permission denied")
+    return workspace_id
