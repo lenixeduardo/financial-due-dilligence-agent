@@ -24,7 +24,18 @@ def calculate_dfp(workspace_id:str,payload:CVMArchiveRequest,_:str=Depends(autho
         lines=parse_cvm_archive(raw,cvm_code=payload.company_code,year=payload.year,document_type="dfp")
         if not lines:
             return {"status":"insufficient_data","computed":[],"stored":0}
-        results=calculate_indicators(lines)
+        # CVM archives can contain both individual/consolidated statements and
+        # multiple restatements. Never mix them in one ratio calculation.
+        groups={}
+        for line in lines:
+            group=(line.cvm_code,line.reference_date,line.scope,
+                   line.dataset_sha256,line.document_type,line.reporting_version)
+            groups.setdefault(group,[]).append(line)
+        results=[]
+        for group, entries in sorted(groups.items()):
+            if not group[-1]:
+                raise ValueError("missing reporting version; manual restatement review required")
+            results.extend(calculate_indicators(entries))
         stored=persist_indicators(workspace_id,results)
         return {"status":"requires_source_review","stored":stored,"computed":[
             {"metric_code":item.metric_code,"value":str(item.value),"scope":item.scope,
