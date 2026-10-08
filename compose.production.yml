@@ -22,6 +22,29 @@ services:
       - ALL
     expose:
       - "8000"
+  backup:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - api
+    read_only: true
+    environment:
+      FINSIGHT_SQLITE_PATH: /data/finsight.sqlite3
+      FINSIGHT_BACKUP_DIR: /backups
+      FINSIGHT_BACKUP_INTERVAL_SECONDS: "21600"
+      FINSIGHT_BACKUP_KEEP: "14"
+    volumes:
+      - ${FINSIGHT_DATA_PATH:?Absolute persistent host data directory required}:/data:ro
+      - ${FINSIGHT_BACKUP_PATH:?Independent host backup directory required}:/backups
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    command: ["python","-m","scripts.backup_loop"]
   web:
     build:
       context: .
