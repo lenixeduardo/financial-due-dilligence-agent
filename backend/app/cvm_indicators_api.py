@@ -31,6 +31,12 @@ def calculate_dfp(workspace_id:str,payload:CVMArchiveRequest,_:str=Depends(autho
             group=(line.cvm_code,line.reference_date,line.scope,
                    line.dataset_sha256,line.document_type,line.reporting_version)
             groups.setdefault(group,[]).append(line)
+        versions_by_scope={}
+        for group in groups:
+            scope_key=(group[0],group[1],group[2],group[3],group[4])
+            versions_by_scope.setdefault(scope_key,set()).add(group[5])
+        if any(len(versions)>1 for versions in versions_by_scope.values()):
+            raise ValueError("multiple restatements found; select a version explicitly before calculation")
         results=[]
         for group, entries in sorted(groups.items()):
             if not group[-1]:
