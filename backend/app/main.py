@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 from .finance import RatioInputs, RatioResult, calculate_ratio, SectorMetric, compare_metrics
 from .evidence_api import router as evidence_router
 from .ingestion_api import router as ingestion_router
+from .comparison_api import router as comparison_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -19,6 +20,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title="FinSight", version="0.3.0", docs_url="/docs", redoc_url=None, lifespan=lifespan)
 app.include_router(evidence_router)
 app.include_router(ingestion_router)
+app.include_router(comparison_router)
 
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
