@@ -3,7 +3,7 @@ import base64
 import binascii
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-from .access import authorize_workspace
+from .access import authorize_workspace, authorize_analyst
 from .cvm_statements import parse_cvm_archive, MAX_ARCHIVE_BYTES
 from .cvm_indicators import calculate_indicators
 from .indicator_store import persist_indicators, get_indicators
@@ -16,7 +16,7 @@ class CVMArchiveRequest(BaseModel):
     zip_base64:str=Field(min_length=4,max_length=45_000_000)
 
 @router.post("/cvm/dfp/indicators")
-def calculate_dfp(workspace_id:str,payload:CVMArchiveRequest,_:str=Depends(authorize_workspace)):
+def calculate_dfp(workspace_id:str,payload:CVMArchiveRequest,_:str=Depends(authorize_analyst)):
     try:
         raw=base64.b64decode(payload.zip_base64,validate=True)
         if len(raw)>MAX_ARCHIVE_BYTES:
