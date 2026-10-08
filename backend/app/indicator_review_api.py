@@ -2,6 +2,7 @@
 from fastapi import APIRouter,Depends,HTTPException
 from pydantic import BaseModel,Field
 from .access import authorize_workspace
+from .reviewer_access import authorize_reviewer
 from .indicator_review import review_indicator,list_reviews
 
 router=APIRouter(prefix="/v1/workspaces/{workspace_id}",tags=["indicator-review"])
@@ -17,7 +18,7 @@ class ReviewRequest(BaseModel):
     justification:str=Field(min_length=15,max_length=2000)
 
 @router.post("/cvm/indicators/reviews",status_code=201)
-def submit_review(workspace_id:str,payload:ReviewRequest,_:str=Depends(authorize_workspace)):
+def submit_review(workspace_id:str,payload:ReviewRequest,_:str=Depends(authorize_reviewer)):
     try:
         return review_indicator(workspace_id=workspace_id,**payload.model_dump())
     except ValueError as exc:
