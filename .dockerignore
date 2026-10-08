@@ -1,0 +1,13 @@
+.git
+.env
+.env.*
+!.env.example
+**/__pycache__
+**/.pytest_cache
+**/node_modules
+**/dist
+**/*.sqlite*
+**/*.db
+data/
+volumes/
+coverage.xml
