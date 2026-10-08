@@ -9,6 +9,7 @@ from .evidence_api import router as evidence_router
 from .ingestion_api import router as ingestion_router
 from .comparison_api import router as comparison_router
 from .cvm_api import router as cvm_router
+from .cvm_indicators_api import router as cvm_indicators_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -23,6 +24,7 @@ app.include_router(evidence_router)
 app.include_router(ingestion_router)
 app.include_router(comparison_router)
 app.include_router(cvm_router)
+app.include_router(cvm_indicators_router)
 
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
