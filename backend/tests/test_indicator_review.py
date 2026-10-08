@@ -22,7 +22,7 @@ def seeded(tmp_path,monkeypatch):
 def test_append_only_review_history(tmp_path,monkeypatch):
     kwargs=seeded(tmp_path,monkeypatch)
     first=review_indicator(**kwargs,decision="rejected")
-    second=review_indicator(**kwargs,decision="approved",justification="Second review completed against the published DFP.")
+    second=review_indicator(**{**kwargs,"justification":"Second review completed against the published DFP."},decision="approved")
     assert first["event_id"]<second["event_id"]
     events=list_reviews("one","1234")
     assert [r["decision"] for r in events]==["approved","rejected"]
