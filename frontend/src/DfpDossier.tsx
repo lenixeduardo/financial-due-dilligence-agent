@@ -1,6 +1,7 @@
 import {useState} from 'react';
 import {FileArchive, FileDown, FileCheck2} from 'lucide-react';
 import './dfp-dossier.css';
+import ReviewPanel from './ReviewPanel';
 
 type Indicator={metric_code:string;period:string;scope:string;value_decimal:string;formula_version:string;dataset_sha256:string;account_codes:string;status:string;company_code:string};
 type Computed={metric_code:string;period:string;scope:string;value:string;formula_version:string;source_sha256:string;account_codes:string[];status:string};
@@ -83,5 +84,6 @@ export default function DfpDossier(){
        <small>Status: {r.status}</small>
      </article>)}
    </div>}
+   <ReviewPanel workspace={workspace} apiKey={key} company={company} rows={rows}/>
  </section>;
 }
