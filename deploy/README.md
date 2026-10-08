@@ -15,7 +15,9 @@ Start:
 Provision the initial admin locally after the database initializes:
 `docker compose --env-file .env.production -f compose.production.yml exec api python -c "from app.db import ensure_workspace;ensure_workspace('local')"`
 
-**The container runs as an unprivileged user**, and the admin-provisioning CLI is intentionally not baked into the web-facing image. Provision accounts from a trusted offline administrative environment with access to a securely copied DB, or add a reviewed one-shot init workflow. Do not permit self-registration or put initial passwords in environment variables.
+**The container runs as an unprivileged user**. Provision accounts through the private server terminal, not an HTTP endpoint:
+`docker compose --env-file .env.production -f compose.production.yml exec -it api python -m scripts.create_user --workspace local --username administrator --role admin`
+The command interactively prompts for a password. Do not permit self-registration or store initial passwords in environment variables.
 
 Known release blockers: account provisioning needs an operational runbook, frontend/backend end-to-end testing on real HTTPS, dynamic security scanning, external disk backup automation, financial reconciliation with actual CVM filings, source licensing and privacy retention review.
 
