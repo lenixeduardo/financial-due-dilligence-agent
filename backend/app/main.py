@@ -1,10 +1,21 @@
 """FinSight API: deterministic calculations and protected evidence access."""
 from fastapi import FastAPI, HTTPException, Request
+from contextlib import asynccontextmanager
+import os
+from .db import initialize_database, ensure_workspace
 from pydantic import BaseModel, Field
 from .finance import RatioInputs, RatioResult, calculate_ratio, SectorMetric, compare_metrics
 from .evidence_api import router as evidence_router
 
-app = FastAPI(title="FinSight", version="0.2.0", docs_url="/docs", redoc_url=None)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    initialize_database()
+    workspace = os.getenv("FINSIGHT_WORKSPACE_ID")
+    if workspace:
+        ensure_workspace(workspace)
+    yield
+
+app = FastAPI(title="FinSight", version="0.3.0", docs_url="/docs", redoc_url=None, lifespan=lifespan)
 app.include_router(evidence_router)
 
 @app.middleware("http")
