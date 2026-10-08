@@ -29,4 +29,4 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r backend/requirements.txt
-      - run: PYTHONPATH=backend pytest -q backend/tests/test_database_integration.py
+      - run: PYTHONPATH=backend pytest -q backend/tests/test_database_integration.py backend/tests/test_retrieval_db.py
