@@ -18,9 +18,14 @@ class ReviewRequest(BaseModel):
     justification:str=Field(min_length=15,max_length=2000)
 
 @router.post("/cvm/indicators/reviews",status_code=201)
-def submit_review(workspace_id:str,payload:ReviewRequest,_:str=Depends(authorize_reviewer)):
+def submit_review(workspace_id:str,payload:ReviewRequest,identity:dict=Depends(authorize_reviewer)):
     try:
-        return review_indicator(workspace_id=workspace_id,**payload.model_dump())
+        data=payload.model_dump()
+        # In users mode, identity comes only from the verified server-side session.
+        from os import getenv
+        if getenv('FINSIGHT_AUTH_MODE')=='users':
+            data['reviewer']=identity['username']
+        return review_indicator(workspace_id=workspace_id,**data)
     except ValueError as exc:
         raise HTTPException(status_code=422,detail=str(exc))
 
