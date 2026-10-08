@@ -53,8 +53,9 @@ function Login(){
 export function SessionHeader(){
  const {session,setSession}=useAuth();
  if(!userAuthMode||!session)return null;
+ const token=session.token;
  async function logout(){
-  try{await fetch('/api/v1/auth/logout',{method:'POST',headers:{'Authorization':'Bearer '+session.token}});}
+  try{await fetch('/api/v1/auth/logout',{method:'POST',headers:{'Authorization':'Bearer '+token}});}
   finally{setSession(null);}
  }
  return <span className="session-user"><span>{session.username} · {session.role}</span>
