@@ -2,7 +2,7 @@
 import os
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
-from .access import authorize_workspace
+from .access import authorize_workspace, authorize_analyst
 from .db import insert_evidence, list_evidence
 from .evidence import Evidence, retrieve, support_claim
 
@@ -28,7 +28,7 @@ class ClaimQuery(BaseModel):
     evidence_ids: list[str] = Field(max_length=20)
 
 @router.post("/evidence",status_code=201)
-def create_evidence(workspace_id: str, payload: EvidenceInput, _: str = Depends(authorize_workspace)):
+def create_evidence(workspace_id: str, payload: EvidenceInput, _: str = Depends(authorize_analyst)):
     try:
         item = Evidence.create(workspace_id=workspace_id, **payload.model_dump())
         insert_evidence(item)

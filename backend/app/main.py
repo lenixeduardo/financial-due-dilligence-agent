@@ -11,6 +11,7 @@ from .comparison_api import router as comparison_router
 from .cvm_api import router as cvm_router
 from .cvm_indicators_api import router as cvm_indicators_router
 from .indicator_review_api import router as indicator_review_router
+from .auth_api import router as auth_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -27,6 +28,7 @@ app.include_router(comparison_router)
 app.include_router(cvm_router)
 app.include_router(cvm_indicators_router)
 app.include_router(indicator_review_router)
+app.include_router(auth_router)
 
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
