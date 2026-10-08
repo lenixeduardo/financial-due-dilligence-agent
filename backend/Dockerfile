@@ -4,6 +4,7 @@ WORKDIR /app
 COPY backend/requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r /app/requirements.txt
 COPY backend/app /app/app
+COPY backend/scripts /app/scripts
 RUN groupadd --gid 10001 finsight && useradd --uid 10001 --gid 10001 --create-home finsight
 USER 10001:10001
 EXPOSE 8000
