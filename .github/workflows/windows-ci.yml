@@ -1,0 +1,29 @@
+name: Windows local installation checks
+on:
+  pull_request:
+  push:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate PowerShell scripts
+        shell: pwsh
+        run: |
+          $scripts = @("deploy/windows/Install-FinSight.ps1", "deploy/windows/Start-FinSight.ps1")
+          foreach ($script in $scripts) {
+            $errors = $null
+            $null = [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $script), [ref]$null, [ref]$errors)
+            if ($errors) { $errors | Out-String | Write-Error; exit 1 }
+          }
+      - name: Python dependencies and local hosting tests
+        shell: pwsh
+        run: |
+          python -m pip install -r backend/requirements.txt
+          $env:PYTHONPATH = "backend"
+          python -m pytest -q backend/tests/test_windows_host.py backend/tests/test_user_auth.py backend/tests/test_backup.py
