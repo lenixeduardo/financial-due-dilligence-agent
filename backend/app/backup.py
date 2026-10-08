@@ -2,6 +2,7 @@
 from pathlib import Path
 import sqlite3
 import os
+from contextlib import closing
 from .db import _database_path
 
 def _check(db: sqlite3.Connection):
@@ -23,9 +24,9 @@ def backup_database(destination: str) -> Path:
     if partial.exists():
         raise FileExistsError("incomplete backup already exists")
     try:
-        with sqlite3.connect(f"file:{source}?mode=ro",uri=True) as origin:
+        with closing(sqlite3.connect(f"file:{source}?mode=ro",uri=True)) as origin:
             _check(origin)
-            with sqlite3.connect(partial) as copied:
+            with closing(sqlite3.connect(partial)) as copied:
                 origin.backup(copied,pages=128)
                 _check(copied)
         os.replace(partial,target)
@@ -37,7 +38,7 @@ def backup_database(destination: str) -> Path:
 
 def verify_backup(filename:str) -> bool:
     target=Path(filename).expanduser().resolve()
-    with sqlite3.connect(f"file:{target}?mode=ro",uri=True) as db:
+    with closing(sqlite3.connect(f"file:{target}?mode=ro",uri=True)) as db:
         _check(db)
     return True
 
@@ -56,8 +57,8 @@ def _copy_backup_to(source:Path,target:Path)->Path:
     if partial.exists():
         raise FileExistsError("partial restore already exists")
     try:
-        with sqlite3.connect(f"file:{source}?mode=ro",uri=True) as origin:
-            with sqlite3.connect(partial) as dest:
+        with closing(sqlite3.connect(f"file:{source}?mode=ro",uri=True)) as origin:
+            with closing(sqlite3.connect(partial)) as dest:
                 origin.backup(dest)
                 _check(dest)
         os.replace(partial,target)
