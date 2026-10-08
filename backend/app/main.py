@@ -8,6 +8,7 @@ from .finance import RatioInputs, RatioResult, calculate_ratio, SectorMetric, co
 from .evidence_api import router as evidence_router
 from .ingestion_api import router as ingestion_router
 from .comparison_api import router as comparison_router
+from .cvm_api import router as cvm_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -21,6 +22,7 @@ app = FastAPI(title="FinSight", version="0.3.0", docs_url="/docs", redoc_url=Non
 app.include_router(evidence_router)
 app.include_router(ingestion_router)
 app.include_router(comparison_router)
+app.include_router(cvm_router)
 
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
