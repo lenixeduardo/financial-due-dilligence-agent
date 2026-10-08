@@ -1,6 +1,7 @@
 import {useState} from 'react';
 import {GitCompare, Plus, Trash2, ShieldAlert} from 'lucide-react';
 import './comparison.css';
+import {useAuth,userAuthMode,authHeaders} from './auth';
 
 type Sector='bank'|'retail'|'software'|'industrial';
 type Metric='roe'|'operating_margin'|'net_debt_ebitda'|'npl_ratio'|'recurring_revenue_ratio';
@@ -22,10 +23,13 @@ const allowed:Record<Metric,Sector[]>={
 const initial:Row[]=[{id:1,company_id:'',sector:'retail',value:'',source_ids:''},
   {id:2,company_id:'',sector:'retail',value:'',source_ids:''}];
 export default function ComparisonWorkbench({multisector}:{multisector:boolean}){
+ const {session}=useAuth();
  const [rows,setRows]=useState<Row[]>(initial);
  const [metric,setMetric]=useState<Metric>('roe');
  const [period,setPeriod]=useState('2025-FY');
  const [workspace,setWorkspace]=useState('local');
+ const effectiveWorkspace=userAuthMode?(session?.workspace??''):workspace;
+ const authorized=userAuthMode?!!session:!!apiKey;
  const [apiKey,setApiKey]=useState('');
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState('');
@@ -45,8 +49,8 @@ export default function ComparisonWorkbench({multisector}:{multisector:boolean})
    try{
      const observations=rows.map(r=>({company_id:r.company_id.trim(),sector:r.sector,metric,period,
        value:r.value.trim(),formula_version:'manual-v1',source_ids:r.source_ids.split(',').map(s=>s.trim()).filter(Boolean)}));
-     const response=await fetch('/api/v1/workspaces/'+encodeURIComponent(workspace.trim())+'/comparisons/validate',
-       {method:'POST',headers:{'Content-Type':'application/json','X-Workspace-Key':apiKey},body:JSON.stringify({observations})});
+     const response=await fetch('/api/v1/workspaces/'+encodeURIComponent(effectiveWorkspace.trim())+'/comparisons/validate',
+       {method:'POST',headers:{'Content-Type':'application/json',...authHeaders(session,apiKey)},body:JSON.stringify({observations})});
      const body=await response.json();
      if(!response.ok)throw new Error(typeof body.detail==='string'?body.detail:'API rejeitou os dados ('+response.status+')');
      setResult(body as Result);
@@ -59,8 +63,8 @@ export default function ComparisonWorkbench({multisector}:{multisector:boolean})
    <p>Preencha indicadores e referências documentais. O motor valida a compatibilidade, mas <strong>não verifica automaticamente os números informados</strong>.</p>
    <div className="notice"><ShieldAlert size={19}/><span>Ambiente local. Os resultados são entradas do usuário não verificadas. Não há ranking ou recomendação financeira.</span></div>
    <div className="comparison-controls">
-     <label>Workspace<input value={workspace} onChange={e=>setWorkspace(e.target.value)}/></label>
-     <label>Chave de acesso<input type="password" autoComplete="off" value={apiKey} onChange={e=>setApiKey(e.target.value)}/></label>
+     {!userAuthMode&&<label>Workspace<input value={workspace} onChange={e=>setWorkspace(e.target.value)}/></label>}
+     {!userAuthMode&&<label>Chave de acesso<input type="password" autoComplete="off" value={apiKey} onChange={e=>setApiKey(e.target.value)}/></label>}
      <label>Indicador<select value={metric} onChange={e=>{setMetric(e.target.value as Metric);setResult(null);}}>{Object.entries(labels).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
      <label>Período<input value={period} onChange={e=>setPeriod(e.target.value)} placeholder="2025-FY"/></label>
    </div>
@@ -74,7 +78,7 @@ export default function ComparisonWorkbench({multisector}:{multisector:boolean})
    </div>)}</div>
    <div className="comparison-actions">
      <button onClick={()=>{setRows(v=>[...v,{id:Math.max(...v.map(x=>x.id))+1,company_id:'',sector:multisector?'software':v[0].sector,value:'',source_ids:''}]);setResult(null);}} disabled={rows.length>=50}><Plus size={16}/> Adicionar empresa</button>
-     <button className="comparison-primary" disabled={busy||!apiKey.trim()||!workspace.trim()} onClick={submit}><GitCompare size={16}/>{busy?'Validando…':'Validar comparação'}</button>
+     <button className="comparison-primary" disabled={busy||!authorized||!effectiveWorkspace.trim()} onClick={submit}><GitCompare size={16}/>{busy?'Validando…':'Validar comparação'}</button>
    </div>
    {error&&<p role="alert" className="workbench-error">{error}</p>}
    {result&&<div className="comparison-result" role="status">
