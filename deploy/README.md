@@ -4,9 +4,9 @@ This is a Docker Compose + Caddy configuration for a **dedicated Linux host with
 
 Prerequisites:
 - Dedicated VM, domain with DNS pointing at the host, firewall ports 80/443, outbound Internet for ACME certificate issuance.
-- Create a private durable directory, e.g. `/srv/finsight-data`, owned by uid/gid 10001 and not inside the web root.
+- Create a private durable directory, e.g. `/srv/finsight-data`, owned by uid/gid 10001 and not inside the web root. Prepare a second directory for snapshots, e.g. /srv/finsight-backups, also owned by 10001; set FINSIGHT_BACKUP_PATH to it.
 - Add a local environment file containing `FINSIGHT_DATA_PATH=/srv/finsight-data`, `FINSIGHT_WORKSPACE_ID=local`, and `FINSIGHT_DOMAIN=finance.example.com`. Replace with your own domain and do not commit private settings.
-- Docker Compose v2, ongoing patching, log aggregation, monitoring and encrypted off-host backups.
+- Docker Compose v2, ongoing patching, log aggregation, monitoring and encrypted off-host backups. The built-in backup container creates integrity-checked snapshots every six hours with 14-file retention on the backup mount. This is NOT a substitute for a separate off-host encrypted copy.
 - Keep CVM outbound collection disabled until a trusted egress filtering solution is deployed.
 
 Start:
