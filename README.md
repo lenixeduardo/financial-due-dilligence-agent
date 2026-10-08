@@ -1,30 +1,53 @@
 # FinSight — Financial Due Diligence Agent
 
-Ferramenta sob medida de análise financeira, em desenvolvimento. **Não é SaaS**.
+Aplicação **sob medida**, em desenvolvimento, para análise individual, comparação setorial e análise multissetorial. Não é SaaS.
 
-## Escopo
-- Análise individual: desempenho, riscos, fluxo de caixa e evidências.
-- Comparação setorial: indicadores equivalentes com benchmarks.
-- Análise multissetorial: proíbe comparações diretas de métricas incompatíveis.
+**Regra:** a IA interpreta; o código calcula; as fontes comprovam.
 
-## Princípio
-**A IA interpreta; o código calcula; as fontes comprovam.** O modelo não calcula nem fabrica indicadores.
+## Banco de dados: SQLite
 
-## Status
-Fundação inicial do backend. Não há RAG em produção, conectores CVM/B3, interface ou relatórios verificados. Exemplos são fictícios.
+Não precisa de Supabase ou PostgreSQL. O arquivo persistente local fica em `data/finsight.sqlite3` por padrão e não deve ser enviado ao GitHub.
 
-## Executar
 ```sh
 python -m venv .venv
+# Ative o ambiente virtual antes de instalar.
 pip install -r backend/requirements.txt
-uvicorn app.main:app --app-dir backend --reload
-pytest backend/tests
+export FINSIGHT_SQLITE_PATH=data/finsight.sqlite3
+export FINSIGHT_WORKSPACE_ID=local
+export FINSIGHT_WORKSPACE_API_KEY='configure-uma-chave-longa-aleatoria'
+PYTHONPATH=backend python -c "from app.db import initialize_database; initialize_database()"
+uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000
 ```
 
-API de desenvolvimento em `http://127.0.0.1:8000/docs`. Nenhum endpoint aceita documentos confidenciais nesta fase.
+Para Windows PowerShell, configure as mesmas variáveis com `$env:NOME = 'valor'` e use `$env:PYTHONPATH = 'backend'`.
 
-## Segurança
-Sem URLs arbitrárias, uploads ou acesso à internet pelo backend inicial. Evite inserir informações pessoais ou sigilosas. Veja `docs/SECURITY.md`.
+Frontend:
+
+```sh
+cd frontend
+npm install
+npm run dev
+```
+
+Testes:
+
+```sh
+PYTHONPATH=backend pytest -q backend/tests
+```
+
+Leia [SQLite](docs/SQLITE.md) para backup e limitações, e [Segurança](docs/SECURITY.md) antes de implantar.
+
+## Status de implementação
+
+- API FastAPI e núcleo financeiro determinístico.
+- Evidências e busca FTS5 isoladas por workspace e empresa.
+- Armazenamento local SQLite com WAL e chaves estrangeiras.
+- Busca híbrida local com vetores 384-d armazenados como JSON; requer geração externa de embeddings.
+- Protótipo React com três modos.
+- Testes automáticos e CI.
+
+**Pendências:** fontes reais CVM/B3, pipeline de embeddings, integração do LLM, identidade de usuários/RBAC, auditoria de segurança e relatórios auditáveis de ponta a ponta. Não publicar a API na internet como serviço de produção.
 
 ## Licença
+
 Nenhuma licença de redistribuição declarada.
