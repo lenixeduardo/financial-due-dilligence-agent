@@ -5,10 +5,10 @@ type Event={id:number;period:string;scope:string;metric_code:string;dataset_sha2
 export default function ReviewPanel({workspace,apiKey,company,rows}:{workspace:string;apiKey:string;company:string;rows:Indicator[]}){
  const {session}=useAuth();
  const authorized=userAuthMode?!!session:!!apiKey;
- const mayReview=userAuthMode?(session?.role==='reviewer'||session?.role==='admin'):(!!apiKey&&!!reviewKey);
  const [selected,setSelected]=useState(0);
  const [reviewer,setReviewer]=useState('');
  const [reviewKey,setReviewKey]=useState('');
+ const mayReview=userAuthMode?(session?.role==='reviewer'||session?.role==='admin'):(!!apiKey&&!!reviewKey);
  const [decision,setDecision]=useState<'approved'|'rejected'>('rejected');
  const [justification,setJustification]=useState('');
  const [events,setEvents]=useState<Event[]>([]);
