@@ -12,5 +12,8 @@ def test_production_requires_session_auth_and_durable_path(tmp_path,monkeypatch)
         assert client.get("/ready").status_code==503
     monkeypatch.setenv("FINSIGHT_AUTH_MODE","users")
     with TestClient(app) as client:
-        assert client.get("/ready").status_code==200
+        assert client.get("/ready").status_code==503  # /tmp is forbidden for production data
         assert client.get("/health").status_code==200
+    monkeypatch.setenv("FINSIGHT_ENV","development")
+    with TestClient(app) as client:
+        assert client.get("/ready").status_code==200
