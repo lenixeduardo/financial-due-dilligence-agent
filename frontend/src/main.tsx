@@ -4,6 +4,7 @@ import {Search,FileSearch,GitCompare,Network,ShieldCheck,ArrowRight,BookOpen} fr
 import './style.css';
 import './workbench.css';
 import Workbench from './Workbench';
+import ComparisonWorkbench from './ComparisonWorkbench';
 
 type Mode = 'individual'|'sector'|'multisector';
 const labels: Record<Mode,string> = {individual:'Análise individual',sector:'Comparação setorial',multisector:'Análise multissetorial'};
@@ -40,7 +41,7 @@ function App(){
       <div className="notice"><BookOpen size={19}/><span>Sem afirmações financeiras fabricadas: os relatórios só serão exibidos após integração, cálculo e verificação de fontes.</span></div></div>
       <div className="case-visual"><span>FINANCIAL DOSSIER</span><div className="visual-line"></div><strong>{mode==='individual'?'Evidência → cálculo → interpretação':mode==='sector'?'Setor → benchmark → comparação':'Setores → compatibilidade → contexto'}</strong><small>Experiência conceitual · Sem dados de mercado</small></div>
     </section>
-    {mode==='individual'&&<Workbench/>}
+    {mode==='individual'?<Workbench/>:<ComparisonWorkbench multisector={mode==='multisector'}/>}
     <footer>FinSight · Projeto em desenvolvimento · Engenharia financeira auditável</footer>
   </main>
  </div>
