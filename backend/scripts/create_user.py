@@ -1,8 +1,8 @@
 """Provision accounts locally. Example: python -m backend.scripts.create_user ..."""
 import argparse
 import getpass
-from backend.app.db import initialize_database,ensure_workspace
-from backend.app.user_auth import create_user
+from app.db import initialize_database,ensure_workspace
+from app.user_auth import create_user
 
 def main():
     parser=argparse.ArgumentParser()
