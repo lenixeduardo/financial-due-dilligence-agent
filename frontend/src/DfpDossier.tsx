@@ -1,6 +1,7 @@
 import {useState} from 'react';
 import {FileArchive, FileDown, FileCheck2} from 'lucide-react';
 import './dfp-dossier.css';
+import {useAuth,userAuthMode,authHeaders} from './auth';
 import ReviewPanel from './ReviewPanel';
 
 type Indicator={metric_code:string;period:string;scope:string;value_decimal:string;formula_version:string;dataset_sha256:string;account_codes:string;status:string;company_code:string};
@@ -10,6 +11,7 @@ const formulas:Record<string,string>={operating_margin:'DRE 3.05 ÷ DRE 3.01',ne
 type Report={status:string;company_code:string;generated_at:string;review_status:'not_reviewed';indicators:Indicator[]};
 function readBase64(file:File):Promise<string>{return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>{const value=reader.result;if(typeof value==='string')resolve(value.split(',')[1]??'');else reject(new Error('Falha de leitura'));};reader.onerror=()=>reject(new Error('Falha de leitura'));reader.readAsDataURL(file);});}
 export default function DfpDossier(){
+ const {session}=useAuth();
  const [workspace,setWorkspace]=useState('local');
  const [key,setKey]=useState('');
  const [company,setCompany]=useState('');
@@ -19,9 +21,12 @@ export default function DfpDossier(){
  const [message,setMessage]=useState('');
  const [error,setError]=useState('');
  const [busy,setBusy]=useState(false);
- const base='/api/v1/workspaces/'+encodeURIComponent(workspace.trim());
+ const activeWorkspace=userAuthMode?(session?.workspace??''):workspace;
+ const authorized=userAuthMode?!!session:!!key;
+ const canEdit=!userAuthMode||session?.role==='analyst'||session?.role==='admin';
+ const base='/api/v1/workspaces/'+encodeURIComponent(activeWorkspace.trim());
  async function request(path:string, options:RequestInit={}){
-  const response=await fetch(base+path,{...options,headers:{'X-Workspace-Key':key,...options.headers}});
+  const response=await fetch(base+path,{...options,headers:{...authHeaders(session,key),...options.headers}});
   const json=await response.json().catch(()=>({detail:'Resposta inválida'}));
   if(!response.ok)throw new Error(typeof json.detail==='string'?json.detail:'Erro na API ('+response.status+')');
   return json;
@@ -56,19 +61,19 @@ export default function DfpDossier(){
   const anchor=document.createElement('a');anchor.href=url;anchor.download='finsight-dfp-'+company.trim()+'.json';anchor.click();
   URL.revokeObjectURL(url);
  }
- const canQuery=!!key&&/^\d{1,8}$/.test(company.trim())&&!!workspace.trim();
+ const canQuery=authorized&&/^\d{1,8}$/.test(company.trim())&&!!activeWorkspace.trim();
  return <section className="dfp-dossier" aria-label="Dossiê DFP CVM">
    <span className="eyebrow">DEMONSTRATIVOS / CVM / DFP</span><h2>Dossiê de indicadores contábeis</h2>
    <p>Calcule indicadores sobre arquivos DFP fornecidos por você. Resultados são preliminares e preservam a fórmula, o exercício e o hash do arquivo.</p>
    <div className="dfp-fields">
-    <label>Workspace<input value={workspace} onChange={e=>setWorkspace(e.target.value)}/></label>
-    <label>Chave da API<input type="password" autoComplete="off" value={key} onChange={e=>setKey(e.target.value)}/></label>
+    {!userAuthMode&&<label>Workspace<input value={workspace} onChange={e=>setWorkspace(e.target.value)}/></label>}
+    {!userAuthMode&&<label>Chave da API<input type="password" autoComplete="off" value={key} onChange={e=>setKey(e.target.value)}/></label>}
     <label>Código CVM<input value={company} onChange={e=>{setCompany(e.target.value);setRows([]);}} inputMode="numeric" placeholder="1234"/></label>
     <label>Exercício<input value={year} onChange={e=>setYear(e.target.value)} inputMode="numeric" placeholder="2025"/></label>
     <label className="dfp-upload">ZIP DFP<input type="file" accept=".zip,application/zip" onChange={e=>setFile(e.target.files?.[0]??null)}/></label>
    </div>
    <div className="dfp-actions">
-    <button disabled={busy||!canQuery||!file} onClick={process}><FileArchive size={17}/>{busy?'Processando…':'Calcular a partir do ZIP'}</button>
+    <button disabled={busy||!canQuery||!canEdit||!file} onClick={process}><FileArchive size={17}/>{busy?'Processando…':'Calcular a partir do ZIP'}</button>
     <button disabled={busy||!canQuery} onClick={load}><FileCheck2 size={17}/>Consultar indicadores</button>
     <button disabled={rows.length===0} onClick={download}><FileDown size={17}/>Exportar dossiê JSON</button>
    </div>
@@ -84,6 +89,6 @@ export default function DfpDossier(){
        <small>Status: {r.status}</small>
      </article>)}
    </div>}
-   <ReviewPanel workspace={workspace} apiKey={key} company={company} rows={rows}/>
+   <ReviewPanel workspace={activeWorkspace} apiKey={key} company={company} rows={rows}/>
  </section>;
 }
